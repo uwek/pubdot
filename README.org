@@ -1,4 +1,4 @@
-#+TITLE: pubdot - a few publich config files
+#+TITLE: pubdot - a few config files
 
 * Whats in it for me?
 ** emlight.org

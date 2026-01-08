@@ -1,0 +1,369 @@
+#+TITLE: Emacs Light 
+#+STARTUP: overview indent
+#+TODO: TODO | DONE 
+#+PROPERTY: header-args :tangle ~/.emacs.d/init.el
+
+- [X] i-browse -> tab-bar
+- [ ] 
+- [ ] 
+- [ ] 
+
+Keybindings:
+- Leader: SPACE
+- C-t   : alternativ im emacs-mode
+- C-q   : transient Menüs
+- ^x ^f : exit ido
+
+* startup
+#+NAME: my/config
+#+BEGIN_SRC elisp :tangle no 
+  (buffer-file-name) 
+#+END_SRC
+
+#+begin_src emacs-lisp :noweb yes
+  (require 'transient)
+
+  (defun my/transient-quoted-insert ()
+    "Exit transient and run `quoted-insert`."
+    (interactive)
+    (message "C-q")
+    (transient-quit-one)
+    (call-interactively #'quoted-insert))
+
+  (setq
+   my/initfile "<<my/config()>>"
+   my-lkeys (list '("." find-file)))
+  (defun my/localfile (fname)
+    (expand-file-name (concat (file-name-directory my/initfile) fname)))
+
+  (defun my-ai2l (list to-add)
+    (interactive)
+    (dolist (item to-add)
+      (add-to-list list item)))
+
+  (defun my-a2l (vlist vval)
+    ;; (if (not (boundp vlist)) (set vlist '()))
+    (add-to-list vlist vval))
+#+end_src
+    
+* sane defaults
+#+begin_src emacs-lisp
+  (load-theme 'wombat)
+  ;; (load-theme 'modus-vivendi)
+  (if (fboundp 'scroll-bar-mode) (scroll-bar-mode -1))
+  (if (fboundp 'tool-bar-mode) (tool-bar-mode -1))
+  (if (fboundp 'menu-bar-mode) (menu-bar-mode -1))
+  (setq custom-file (make-temp-file "emacs-custom")) 
+  (setq visible-bell 1)
+  (setq inhibit-startup-screen t)
+  (defalias 'yes-or-no-p 'y-or-n-p)
+  (setq make-backup-files nil)
+  (show-paren-mode)
+  (electric-indent-mode -1) 
+  (recentf-mode 1)
+  (setq history-length 25)
+  (savehist-mode 1)
+  (save-place-mode 1)
+  (global-auto-revert-mode 1)
+  (setq global-auto-revert-non-file-buffers t)
+  (xterm-mouse-mode 1)
+  (setq dired-dwim-target t) ;; two-pane dired
+  (setq dired-recursive-copies 'top)
+  (setq dired-recursive-deletes 'top)
+  (setq dired-kill-when-opening-new-dired-buffer t)
+  (setq dired-use-ls-dired nil)
+  (setq display-line-numbers-type 'relative)
+  ;; (global-display-line-numbers-mode 1)
+  ;; (display-line-numbers-mode 'toggle)
+  (global-visual-line-mode t)
+
+  (setq system-time-locale "de_DE.UTF-8")
+  ;; (format-time-string "%Y-%m-%d, %A")
+
+#+end_src
+
+* COMMENT external packages
+** package: use-package
+#+BEGIN_SRC emacs-lisp
+  (require 'package)
+  (setq package-check-signature nil)
+  (setq package-enable-at-startup nil)
+  (setq package-archives '(
+                           ("org"   . "http://orgmode.org/elpa/")
+                           ("gnu"   . "http://elpa.gnu.org/packages/")
+                           ("melpa" . "https://melpa.org/packages/")
+                           ))
+  (package-initialize)
+  ;;(setq package-check-signature nil)
+  (unless (package-installed-p 'use-package)
+    (package-refresh-contents);
+    (package-install 'use-package))
+  (require 'use-package)
+  (setq use-package-always-ensure t)
+  (setq use-package-always-defer nil)
+  (setq use-package-verbose t)
+  (setq use-package-compute-statistics t)
+#+END_SRC
+
+** package: which-key
+#+BEGIN_SRC emacs-lisp
+  (use-package which-key
+  :init
+    (which-key-mode 1)
+  :diminish
+  :config
+  (setq which-key-side-window-location 'bottom
+	  which-key-sort-order #'which-key-key-order-alpha
+	  which-key-sort-uppercase-first nil
+	  which-key-add-column-padding 1
+	  which-key-max-display-columns nil
+	  which-key-min-display-lines 6
+	  which-key-side-window-slot -10
+	  which-key-side-window-max-height 0.25
+	  which-key-idle-delay 0.8
+	  which-key-max-description-length 25
+	  ;; which-key-allow-imprecise-window-fit t
+	  which-key-separator " → " ))
+#+END_SRC
+
+* modeline
+#+begin_src emacs-lisp
+  (setq-default mode-line-format
+                '("%e" (:eval (format " [%d] " (tab-bar--current-tab-index)))
+  		mode-line-front-space 
+                  mode-line-modified " " mode-line-buffer-identification " "
+                  mode-line-position (vc-mode vc-mode) ;; mode-line-modes 
+                  mode-line-misc-info ;; mode-line-end-spaces
+                  ))
+
+  (setq display-time-24hr-format t)
+  (setq display-time-default-load-average nil)
+  (setq battery-mode-line-format "[%b%p%%] ")
+  ;; (display-time-mode -1)
+  (when (string-match-p (regexp-quote "load") (battery))
+    (display-battery-mode 1))
+  ;; (:eval (format " [%d] " (tab-bar--current-tab-index)))
+#+end_src
+
+* dired
+#+begin_src emacs-lisp
+  (require 'dired)
+    
+  (setq dired-dwim-target t)                  ;; do what I mean
+  (setq dired-recursive-copies 'always)       ;; don't ask when copying directories
+  (setq dired-create-destination-dirs 'ask)   
+  (setq dired-clean-confirm-killing-deleted-buffers nil)
+  (setq dired-make-directory-clickable t)
+  (setq dired-mouse-drag-files t)
+  (setq dired-kill-when-opening-new-dired-buffer t)   ;; Tidy up open buffers by default
+  #+end_src
+
+  (setq dired-recursive-copies 'top)
+  (setq dired-recursive-deletes 'top)
+  (setq dired-use-ls-dired nil)
+
+** dired-transient
+#+begin_src emacs-lisp
+  (transient-define-prefix my/dired-transient ()
+    "dired-mode"
+    [["Dired"
+      ("h" "hi-de" dired-hide-details-mode)
+      ("w" "wdired" wdired-change-to-wdired-mode)
+      ]
+     ["Quit"
+      ("Q" "Quoted insert" my/transient-quoted-insert)
+      ("q" "Quit" transient-quit-one)]
+     ])
+  (define-key dired-mode-map (kbd "C-q") #'my/dired-transient)
+#+end_src
+
+* viper-mode
+#+begin_src emacs-lisp
+  (setq viper-mode t)
+  (setq viper-inhibit-startup-message t)
+  (setq viper-expert-level '5)
+  (setq viper-want-ctl-h-help t)
+  (setq viper-ex-style-editing nil)
+  (setq viper-no-multiple-ESC nil)
+  (setq viper-syntax-preference 'extended)
+  (setq viper-vi-style-in-minibuffer nil)
+
+  (eval-after-load 'viper_x
+    '(progn
+       (setq
+        viper-vi-state-id      (concat (propertize "<V>" 'face '(((:background "Green" :foreground "White")))) " ")
+        viper-emacs-state-id   (concat (propertize "<E>" 'face '(((:background "Red" :foreground "White")))) "  ")
+        viper-insert-state-id  (concat (propertize "<I>" 'face '(((:background "Orange" :foreground "Black")))) " ")
+        viper-replace-state-id (concat (propertize "<R>" 'face '(((:background "Orange" :foreground "Black")))) " "))
+       ;; The property `risky-local-variable' is a security measure
+       ;; for mode line variables that have properties
+       (put 'viper-mode-string 'risky-local-variable t)))
+
+  (require 'viper)
+#+end_src
+
+* ido-mode
+c-b, c-f, c-j
+#+begin_src emacs-lisp
+  (ido-mode t)
+  (setq ido-enable-flex-matching t)
+  ;; Display ido results vertically, rather than horizontally
+  (setq  ido-decorations (quote ("\n-> " "" "\n   " "\n   ..." "[" "]" " [No match]" " [Matched]" " [Not readable]" " [Too big]" " [Confirm]")))
+#+end_src
+
+* org-mode
+** defaults
+#+begin_src emacs-lisp
+  (require 'org-tempo)
+  (setq org-use-speed-commands t)
+#+end_src
+
+** org-transient
+#+begin_src emacs-lisp
+  (transient-define-prefix my/org-transient ()
+    "cworg-mode"
+    [["Todo"
+      ("T" "TODO" org-todo :transient nil)
+      ("t" "TODO" (lambda()(interactive)(org-todo "TODO")) :transient t)
+      ("d" "DONE" (lambda()(interactive)(org-todo "DONE")) :transient t)
+      ]
+     ["File"
+      ("b" "org-babel-tangle ^c^vt" org-babel-tangle)
+      ]
+     ["Quit"
+      ("Q" "Quoted insert" my/transient-quoted-insert)
+      ("q" "Quit" transient-quit-one)]
+     ])
+  (define-key org-mode-map (kbd "C-q") #'my/org-transient)
+#+end_src
+
+** org-babel
+#+begin_src emacs-lisp
+  (org-babel-do-load-languages 'org-babel-load-languages
+  			       (append org-babel-load-languages
+  				       '((shell     . t)
+  					 (js        . t)
+  					 (python     . t)
+  					 (awk       . t))))
+
+  ;; damit :session funktioniert ...
+  (setq python-shell-completion-native-enable nil)
+
+  (setq org-babel-python-command "python3")
+#+end_src
+
+#+begin_src python :tangle no :results output
+  import os
+  from datetime import datetime
+  import platform
+  print("Kernel " + platform.python_version() + " in " + os.getcwd() + " (" + datetime.now().strftime("%d/%m/%Y %H:%M:%S") + ")")
+#+end_src
+
+#+RESULTS:
+: Kernel 3.13.5 in /home/uwek (06/01/2026 22:37:13)
+
+#+begin_src shell :tangle no
+echo "Moin!"
+#+end_src
+
+* eshell
+#+BEGIN_SRC emacs-lisp
+  (setq eshell-rc-script (concat user-emacs-directory "eshell-profile")
+        eshell-aliases-file (concat user-emacs-directory "eshell-aliases")
+        eshell-history-size 5000
+        eshell-buffer-maximum-lines 5000
+        eshell-hist-ignoredups t
+        eshell-scroll-to-bottom-on-input t
+        eshell-destroy-buffer-when-process-dies t
+        eshell-visual-commands'("bash" "fish" "htop" "ssh" "top" "zsh"))
+#+END_SRC
+* tab-bar-mode
+#+begin_src emacs-lisp
+  (tab-bar-mode 1) ;; !!! -1 => emacs core dump :-(
+  (setq my/tabs 5
+        tab-bar-tab-hints t
+        tab-bar-close-button-show nil)
+
+  (nconc my-lkeys
+         (list
+  	'(",," toggle-frame-tab-bar "taggle bar")
+  	'(",s" tab-switcher "switcher")
+  	'(",c" tab-new "create")
+  	'(",r" tab-rename "rename")
+  	'(",k" tab-close "kill")
+  	))
+
+  (dotimes (i my/tabs)
+    (progn
+      (let ((definer (intern "my/leader-keys") )
+            (key (format "%d" (+ i 1)))
+            (func `(lambda()(interactive)(tab-select ,(+ i 1))))
+            (descr (format "Tab %d" (+ i 1))))
+        ;;(eval `(,definer ,key (list func :wk descr)))
+        (nconc my-lkeys (list (list key func descr)))
+        (global-set-key (kbd (format "C-c %d" (+ i 1))) func)
+        )))
+
+  (global-set-key (kbd "C-c 0") 'tab-switcher)
+
+  (customize-set-variable 'tab-bar-show nil)
+  (dotimes (i (- my/tabs 1)) (tab-new)) ;; 4 leere tabs
+  (tab-select 1)
+#+end_src
+
+* eww
+#+begin_src emacs-lisp
+(require 'url-http)
+(setq browse-url-browser-function 'eww-browse-url)
+(setq url-user-agent "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3739.0 Safari/537.36\n")
+(setq shr-use-colors nil)
+#+end_src
+
+* key-mappings
+#+begin_src emacs-lisp
+  ;; (global-set-key (kbd "C-z") 'undo) ;;; nicht mit viper-mode
+  (defun uka/showkeys ()
+    (interactive)
+    (setq ostr "" li 0)
+    (setq sh-cols (/ (window-total-width) 25))
+    (cl-loop for (key fun label) in my-lkeys do
+             (progn
+               (setq li (+ li 1))
+               (setq ostr (concat ostr 
+                                  (format "%7s: %-15.15s%s" key
+                                          (if (stringp label) label fun)
+                                          (if (= (mod li sh-cols) 0) "\n" "")
+                                          )))))
+    (message ostr))
+
+    (nconc my-lkeys
+           (list
+            '("SPC" execute-extended-command "M-x")
+            ;; '("." find-file)
+            ;; '("#" hippie-expand)
+            '("#" (lambda () (interactive) (display-line-numbers-mode 'toggle)) "line numbers") 
+            '("c" count-words)
+            '("fc" (lambda () (interactive) (find-file my/initfile)) "find-file config") 
+            '("fr" recentf-open-files)
+            ;; windmove
+            '("z" windmove-swap-states-left "zoom to left")
+            '("<left>" windmove-left)
+            '("<right>" windmove-right)
+            '("<up>" windmove-up)
+            '("<down>" windmove-down)
+            '("B" bookmark-bmenu-list)
+            '("b" bookmark-set)
+            '("?" uka/showkeys)
+            ))
+    (define-prefix-command 'my-map)
+    (global-set-key (kbd "\C-t") 'my-map)
+    (cl-loop for (key fun) in my-lkeys do
+             (progn
+               (define-key my-map (kbd key) fun)
+               ;;(define-key viper-emacs-global-user-map (kbd (concat "SPC " key)) fun)
+               (define-key viper-vi-global-user-map (kbd (concat "SPC " key)) fun)
+               ))
+
+  (which-key-mode) ;; standard ab emacs 30
+#+end_src
+

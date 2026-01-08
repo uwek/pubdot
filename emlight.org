@@ -3,11 +3,6 @@
 #+TODO: TODO | DONE 
 #+PROPERTY: header-args :tangle ~/.emacs.d/init.el
 
-- [X] i-browse -> tab-bar
-- [ ] 
-- [ ] 
-- [ ] 
-
 Keybindings:
 - Leader: SPACE
 - C-t   : alternativ im emacs-mode
@@ -129,7 +124,7 @@ Keybindings:
 * modeline
 #+begin_src emacs-lisp
   (setq-default mode-line-format
-                '("%e" (:eval (format " [%d] " (tab-bar--current-tab-index)))
+                '("%e" (:eval (format " [%d] " (+ 1 (tab-bar--current-tab-index))))
   		mode-line-front-space 
                   mode-line-modified " " mode-line-buffer-identification " "
                   mode-line-position (vc-mode vc-mode) ;; mode-line-modes 

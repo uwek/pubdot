@@ -1,9 +1,9 @@
 #+TITLE: pubdot - a few publich config files
 
-Whats in it for me?
-* emlight.org
+* Whats in it for me?
+** emlight.org
 a minimal emacs configuration (v30+) w/o external packages
-* git-sync
+** git-sync
 does what is says: https://github.com/simonthum/git-sync
-* dsync
+** dsync
 simple wrapper for git-sync

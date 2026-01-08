@@ -1,0 +1,6 @@
+#!/bin/bash
+
+git config --bool branch.main.sync true
+git add --all
+git commit -m "changed"
+./git-sync
